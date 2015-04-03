@@ -25,9 +25,15 @@ long lastTriggerTime = 0;
 //  currentTriggerTime is used to hold the current time to calculate the timespane between revolutions
 long currentTriggerTime = 0;
 
+//  holds the timespan between triggers
+long triggerInterval = 0;
+
 //  lastTriggerValue does what it says on the tin
 //  using this we can prevent issues when the switch is detected as on for a while
 int lastTriggerValue = 0;
+
+//  triggerValue will hold the current value of the trigger
+int triggerValue = 0;
 
 //  Pin the switch it connected to
 int trigger = 7;
@@ -42,56 +48,58 @@ void setup() {
 
   //  Start the serial connection to the PC  
   Serial.begin(9600);
+  Serial.println("Serial port opened");
   
   cli();//stop interrupts
 
-  //set timer0 interrupt at 2kHz
-  TCCR0A = 0;// set entire TCCR2A register to 0
-  TCCR0B = 0;// same for TCCR2B
-  TCNT0  = 0;//initialize counter value to 0
+  //set timer1 interrupt at 2kHz
+  TCCR1A = 0;// set entire TCCR2A register to 0
+  TCCR1B = 0;// same for TCCR2B
+  TCNT1  = 0;//initialize counter value to 0
   // set compare match register for 2khz increments
-  OCR0A = 124;// = (16*10^6) / (2000*64) - 1 (must be <256)
+  OCR1A = 124;// = (16*10^6) / (2000*64) - 1 (must be <256)
   // turn on CTC mode
-  TCCR0A |= (1 << WGM01);
+  TCCR1A |= (1 << WGM01);
   // Set CS01 and CS00 bits for 64 prescaler
-  TCCR0B |= (1 << CS01) | (1 << CS00);
+  TCCR1B |= (1 << CS01) | (1 << CS00);
   // enable timer compare interrupt
-  TIMSK0 |= (1 << OCIE0A);
+  TIMSK1 |= (1 << OCIE1A);
 
   sei();//allow interrupts
 
   //  set the initial value so that it isn't 0
-  lastSwitchTime = millis();  
+  lastTriggerTime = millis();  
 }//end setup
 
-ISR(TIMER0_COMPA_vect) {
-  //timer0 interrupt 2kHz, calculates RPM
+ISR(TIMER1_COMPA_vect) {
+  //timer1 interrupt 2kHz, calculates RPM
   
   //  Read the value of the trigger
-  triggerVal = digitalRead(trigger);
+  triggerValue = digitalRead(trigger);
   
   //  pullup resistors activate so value is inverted
   //  normalise it to 0 for off and 1 for on
-  triggerVal = triggerVal == 0 ? 1 : 0;
+  triggerValue = triggerValue == 0 ? 1 : 0;
   
   //  If the pin has changed state, reset the counter
-  if(lastTriggerValue != triggerVal)
+  if(lastTriggerValue != triggerValue)
   {
     //  State has changed so update the last state var
-    lastTriggerValue = triggerVal;
+    lastTriggerValue = triggerValue;
     
-    if(triggerVal == 1)
+    if(triggerValue == 1)
     {
       //  If 1 then we have completed a revolution
       currentTriggerTime = millis();
+      triggerInterval = currentTriggerTime - lastTriggerTime;
+      lastTriggerTime = currentTriggerTime;
+      
+      Serial.println(triggerInterval);
     }
   }
 }
 
 void loop() {
-    
-  Serial.println(rpm);
-  delay(10);
-  
+      
 }
 
