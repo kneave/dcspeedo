@@ -81,6 +81,14 @@ ISR(TIMER1_COMPA_vect) {
   //  normalise it to 0 for off and 1 for on
   triggerValue = triggerValue == 0 ? 1 : 0;
   
+  //  measure the time since the last
+  currentTriggerTime = millis();
+  triggerInterval = currentTriggerTime - lastTriggerTime;
+  
+  //  if triggerInterval > 3 seconds, you've probably stopped pedalling
+  if(triggerInterval >= 3000)
+    rpm = 0;
+  
   //  If the pin has changed state, reset the counter
   if(lastTriggerValue != triggerValue)
   {
@@ -90,16 +98,16 @@ ISR(TIMER1_COMPA_vect) {
     if(triggerValue == 1)
     {
       //  If 1 then we have completed a revolution
-      currentTriggerTime = millis();
-      triggerInterval = currentTriggerTime - lastTriggerTime;
       lastTriggerTime = currentTriggerTime;
       
-      Serial.println(triggerInterval);
+      //  rpm = 60000ms / interval
+      rpm = 60000 / triggerInterval;
     }
   }
 }
 
 void loop() {
-      
+  Serial.println(rpm);          
+  delay(500);
 }
 
