@@ -15,6 +15,19 @@
 //this code will enable the timer0 interrupt.
 //timer0 will interrupt at 2kHz
 
+//  useful maths constants
+const float pi = 3.14159265;
+const float inchesPerMile = 63360;
+
+//  virtual bike wheel size in inches
+const int wheelSize = 26;
+
+//  virtual bike gear ration, nonesense for now
+const float gearRatio = 4;
+
+//  virtual wheel circumference
+const float wheelCircumference = wheelSize * pi;
+
 //storage variables
 
 //  lastTriggerTimer will contain the last time that the pedals completed a revolution
@@ -38,8 +51,11 @@ int triggerValue = 0;
 //  Pin the switch it connected to
 int trigger = 7;
 
-//  current RPM
-float rpm = 0;
+//  current cadence
+float cadence = 0;
+
+//  current speed
+float currentSpeed = 0;
 
 void setup() {
   //  Set up the trigger input
@@ -72,7 +88,7 @@ void setup() {
 }//end setup
 
 ISR(TIMER1_COMPA_vect) {
-  //timer1 interrupt 2kHz, calculates RPM
+  //timer1 interrupt 2kHz, calculates cadence
   
   //  Read the value of the trigger
   triggerValue = digitalRead(trigger);
@@ -87,7 +103,10 @@ ISR(TIMER1_COMPA_vect) {
   
   //  if triggerInterval > 3 seconds, you've probably stopped pedalling
   if(triggerInterval >= 3000)
-    rpm = 0;
+  {
+    cadence = 0;
+    currentSpeed = 0;
+  }
   
   //  If the pin has changed state, reset the counter
   if(lastTriggerValue != triggerValue)
@@ -99,15 +118,30 @@ ISR(TIMER1_COMPA_vect) {
     {
       //  If 1 then we have completed a revolution
       lastTriggerTime = currentTriggerTime;
+            
+      //  cadence = 60000ms / interval
+      cadence = 60000 / triggerInterval;
+            
+      //  how many times as the rear wheel turned?
+      //  assume the rear wheel turns 4 times per pedel revolution
+      //  we'll make this accurate to my bike at some point, just using it as a magic number for now
       
-      //  rpm = 60000ms / interval
-      rpm = 60000 / triggerInterval;
+      //  rph = revolutions per hour of the pedals
+      float rph = cadence * 60;
+      float wheelRph = rph * gearRatio;
+      
+      //  speed in inches per hour
+      float inchesPerHour = wheelCircumference * wheelRph;
+      currentSpeed = inchesPerHour / inchesPerMile;      
     }
   }
 }
 
 void loop() {
-  Serial.println(rpm);          
+  //  Return speed and cadence as comma separated values
+  Serial.print(currentSpeed);
+  Serial.print(",");
+  Serial.println(cadence);          
   delay(500);
 }
 
