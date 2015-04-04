@@ -1,0 +1,13 @@
+C:\Users\Keegan\Documents\Arduino\deskcycle_speedo\display\DeskCycle Speedo\Temp\UnityVS_bin\Debug\Assembly-CSharp.dll
+C:\Users\Keegan\Documents\Arduino\deskcycle_speedo\display\DeskCycle Speedo\Temp\UnityVS_bin\Debug\Assembly-CSharp.pdb
+C:\Users\Keegan\Documents\Arduino\deskcycle_speedo\display\DeskCycle Speedo\Temp\UnityVS_bin\Debug\UnityEditor.dll
+C:\Users\Keegan\Documents\Arduino\deskcycle_speedo\display\DeskCycle Speedo\Temp\UnityVS_bin\Debug\UnityEditor.iOS.Extensions.Xcode.dll
+C:\Users\Keegan\Documents\Arduino\deskcycle_speedo\display\DeskCycle Speedo\Temp\UnityVS_bin\Debug\UnityEngine.dll
+C:\Users\Keegan\Documents\Arduino\deskcycle_speedo\display\DeskCycle Speedo\Temp\UnityVS_bin\Debug\UnityEngine.UI.dll
+C:\Users\Keegan\Documents\Arduino\deskcycle_speedo\display\DeskCycle Speedo\Temp\UnityVS_bin\Debug\UnityEngine.xml
+C:\Users\Keegan\Documents\Arduino\deskcycle_speedo\display\DeskCycle Speedo\Temp\UnityVS_bin\Debug\UnityEditor.xml
+C:\Users\Keegan\Documents\Arduino\deskcycle_speedo\display\DeskCycle Speedo\Temp\UnityVS_bin\Debug\UnityEngine.UI.xml
+C:\Users\Keegan\Documents\Arduino\deskcycle_speedo\display\DeskCycle Speedo\Temp\UnityVS_bin\Debug\UnityEditor.iOS.Extensions.Xcode.xml
+C:\Users\Keegan\Documents\Arduino\deskcycle_speedo\display\DeskCycle Speedo\obj\Debug\UnityVS.DeskCycle Speedo.CSharp.csprojResolveAssemblyReference.cache
+C:\Users\Keegan\Documents\Arduino\deskcycle_speedo\display\DeskCycle Speedo\obj\Debug\Assembly-CSharp.dll
+C:\Users\Keegan\Documents\Arduino\deskcycle_speedo\display\DeskCycle Speedo\obj\Debug\Assembly-CSharp.pdb
