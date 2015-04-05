@@ -3,14 +3,15 @@ using System.Collections;
 using System.IO.Ports;
 using UnityEngine.UI;
 using System.ComponentModel;
+using System;
 
 public class SpeedoController : MonoBehaviour {
     private SerialPort serialPort = new SerialPort("COM3", 9600, Parity.None, 8, StopBits.One);
     private string message;
     private string[] messageArr;
 
-    private string speed = "0";
-    private string cadence = "0";
+    private float speed = 0;
+    private float cadence = 0;
 
     public Text speedoText;
     public Text cadenceText;
@@ -38,8 +39,8 @@ public class SpeedoController : MonoBehaviour {
                     messageArr = message.Split(',');
                     if (messageArr.Length != 0)
                     {
-                        speed = messageArr[0];
-                        cadence = messageArr[1];
+                        speed = Convert.ToSingle(messageArr[0]);
+                        cadence = Convert.ToSingle(messageArr[1]);
                     }
                 }
             }
@@ -52,8 +53,8 @@ public class SpeedoController : MonoBehaviour {
 	
 	// Update is called once per frame
 	void Update () {
-        speedoText.text = speed;
-        cadenceText.text = cadence;        
+        speedoText.text = speed.ToString();
+        cadenceText.text = cadence.ToString();        
 	}
 
     public void OpenConnection()
@@ -90,5 +91,4 @@ public class SpeedoController : MonoBehaviour {
         serialPort.Close();
         serialMonitor.CancelAsync();
     }
-
 }
