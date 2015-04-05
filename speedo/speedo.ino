@@ -23,7 +23,7 @@ const float inchesPerMile = 63360;
 const int wheelSize = 26;
 
 //  virtual bike gear ration, nonesense for now
-const float gearRatio = 4;
+const float gearRatio = 2.75;
 
 //  virtual wheel circumference
 const float wheelCircumference = wheelSize * pi;
