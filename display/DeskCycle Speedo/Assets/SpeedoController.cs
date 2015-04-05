@@ -88,6 +88,7 @@ public class SpeedoController : MonoBehaviour {
     void OnApplicationQuit()
     {
         serialPort.Close();
+        serialMonitor.CancelAsync();
     }
 
 }
