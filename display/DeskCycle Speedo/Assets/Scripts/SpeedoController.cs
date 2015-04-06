@@ -99,6 +99,9 @@ public class SpeedoController : MonoBehaviour {
         
         if (!File.Exists(filename))
         {
+            //  Reset the distance with each new file.  This means each new day will be reset.
+            distance = 0;
+
             // Create a file to write to. 
             using (StreamWriter sw = File.CreateText(filename))
             {
