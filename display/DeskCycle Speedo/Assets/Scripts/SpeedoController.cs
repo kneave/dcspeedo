@@ -1,10 +1,10 @@
-﻿using UnityEngine;
-using System.Collections;
-using System.IO.Ports;
-using UnityEngine.UI;
+﻿using System;
 using System.ComponentModel;
-using System;
+using System.IO;
+using System.IO.Ports;
 using System.Threading;
+using UnityEngine;
+using UnityEngine.UI;
 
 public class SpeedoController : MonoBehaviour {
     private SerialPort serialPort;
@@ -31,10 +31,9 @@ public class SpeedoController : MonoBehaviour {
 	// Use this for initialization
     void Start()
     {
-        
-            serialMonitor.WorkerSupportsCancellation = true;
-            serialMonitor.DoWork += serialMonitor_DoWork;
-            serialMonitor.RunWorkerAsync();
+        serialMonitor.WorkerSupportsCancellation = true;
+        serialMonitor.DoWork += serialMonitor_DoWork;
+        serialMonitor.RunWorkerAsync();
     }
 
     void serialMonitor_DoWork(object sender, DoWorkEventArgs e)
@@ -63,15 +62,20 @@ public class SpeedoController : MonoBehaviour {
                                 speed = Convert.ToSingle(messageArr[0]);
                                 cadence = Convert.ToSingle(messageArr[1]);
 
-                                if(lastReading != DateTime.MinValue)
+                                if (speed != 0)
                                 {
-                                    //  this gives us the time since the last reading
-                                    //  we will use this to calculat how far we have travelled at our current speed
-                                    timeDelta = DateTime.Now - lastReading;
-                                    time += timeDelta;
+                                    if (lastReading != DateTime.MinValue)
+                                    {
+                                        //  this gives us the time since the last reading
+                                        //  we will use this to calculat how far we have travelled at our current speed
+                                        timeDelta = DateTime.Now - lastReading;
+                                        time += timeDelta;
+                                    }
+                                    lastReading = DateTime.Now;
+                                    distance += speed * (float)timeDelta.TotalHours; 
                                 }
-                                lastReading = DateTime.Now;
-                                distance += speed * (float)timeDelta.TotalHours;
+
+                                WriteLog();
                             }
                         }
                     }
@@ -85,13 +89,43 @@ public class SpeedoController : MonoBehaviour {
             }
         }
     }
+
+    private void WriteLog()
+    {
+        string filename = string.Format(@"Data\{0:00}{1:00}{2:0000}.csv",
+            DateTime.Now.Day,
+            DateTime.Now.Month,
+            DateTime.Now.Year);
+        
+        if (!File.Exists(filename))
+        {
+            // Create a file to write to. 
+            using (StreamWriter sw = File.CreateText(filename))
+            {
+                sw.WriteLine("DateTime,Speed,Cadence,Distance");
+            }
+        }
+
+        if (File.Exists(filename))
+        {
+            // Create a file to write to. 
+            using (StreamWriter sw = File.AppendText(filename))
+            {
+                sw.WriteLine("{0},{1},{2},{3}",
+                    DateTime.Now.ToString(),
+                    speed,
+                    cadence,
+                    distance);
+            }
+        }
+    }
 	
 	// Update is called once per frame
 	void Update () {
         speedoText.text = speed.ToString();
         cadenceText.text = cadence.ToString();
         distanceText.text = distance.ToString("F");
-        timeText.text = string.Format("{0}:{1}:{2}",
+        timeText.text = string.Format("{0:00}:{1:00}:{2:00}",
             time.Hours, time.Minutes, time.Seconds);
 	}
 
