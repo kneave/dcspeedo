@@ -5,6 +5,7 @@ using UnityEngine.UI;
 using System.ComponentModel;
 using System;
 using System.Threading;
+using System.IO;
 
 public class SpeedoController : MonoBehaviour {
     private SerialPort serialPort;
@@ -72,6 +73,8 @@ public class SpeedoController : MonoBehaviour {
                                 }
                                 lastReading = DateTime.Now;
                                 distance += speed * (float)timeDelta.TotalHours;
+
+                                WriteLog();
                             }
                         }
                     }
@@ -82,6 +85,37 @@ public class SpeedoController : MonoBehaviour {
             catch (System.Exception ex)
             {
                 Debug.LogException(ex);
+            }
+        }
+    }
+
+    private void WriteLog()
+    {
+        string filename = string.Format(@"Data\{0:00}{1:00}{2:0000}.csv",
+            DateTime.Now.Day,
+            DateTime.Now.Month,
+            DateTime.Now.Year);
+
+
+        if (!File.Exists(filename))
+        {
+            // Create a file to write to. 
+            using (StreamWriter sw = File.CreateText(filename))
+            {
+                sw.WriteLine("DateTime,Speed,Cadence,Distance");
+            }
+        }
+
+        if (File.Exists(filename))
+        {
+            // Create a file to write to. 
+            using (StreamWriter sw = File.AppendText(filename))
+            {
+                sw.WriteLine("{0},{1},{2},{3}",
+                    DateTime.Now.ToString(),
+                    speed,
+                    cadence,
+                    distance);
             }
         }
     }
