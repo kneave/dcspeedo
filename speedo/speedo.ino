@@ -64,7 +64,6 @@ void setup() {
 
   //  Start the serial connection to the PC  
   Serial.begin(9600);
-  Serial.println("Serial port opened");
   
   cli();//stop interrupts
 
