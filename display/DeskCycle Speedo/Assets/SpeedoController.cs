@@ -4,45 +4,80 @@ using System.IO.Ports;
 using UnityEngine.UI;
 using System.ComponentModel;
 using System;
+using System.Threading;
 
 public class SpeedoController : MonoBehaviour {
-    private SerialPort serialPort = new SerialPort("COM3", 9600, Parity.None, 8, StopBits.One);
+    private SerialPort serialPort;
+    private string port = string.Empty;
+
     private string message;
     private string[] messageArr;
 
+    //  Units are MPH, RPM, Miles
     private float speed = 0;
     private float cadence = 0;
+    private float distance = 0;
+    private TimeSpan time = new TimeSpan(0);
 
     public Text speedoText;
     public Text cadenceText;
+    public Text distanceText;
+    public Text timeText;
+
+    private DateTime lastReading = DateTime.MinValue;
 
     private BackgroundWorker serialMonitor = new BackgroundWorker();
 
 	// Use this for initialization
-	void Start () {
-        OpenConnection();
-
-        serialMonitor.WorkerSupportsCancellation = true;
-        serialMonitor.DoWork += serialMonitor_DoWork;
-        serialMonitor.RunWorkerAsync();
-	}
+    void Start()
+    {
+        
+            serialMonitor.WorkerSupportsCancellation = true;
+            serialMonitor.DoWork += serialMonitor_DoWork;
+            serialMonitor.RunWorkerAsync();
+    }
 
     void serialMonitor_DoWork(object sender, DoWorkEventArgs e)
     {
+        TimeSpan timeDelta = new TimeSpan();
+
         while (!serialMonitor.CancellationPending)
         {
             try
             {
-                message = serialPort.ReadLine();
-                if (message != string.Empty)
+                if(string.IsNullOrEmpty(port))
+                    port = FindSpeedo();
+                else
                 {
-                    messageArr = message.Split(',');
-                    if (messageArr.Length != 0)
+                    if (!serialPort.IsOpen)
+                        OpenConnection(port);
+                    else
                     {
-                        speed = Convert.ToSingle(messageArr[0]);
-                        cadence = Convert.ToSingle(messageArr[1]);
+                        serialPort.Write("b");
+                        message = serialPort.ReadLine();
+                        if (message != string.Empty)
+                        {
+                            messageArr = message.Split(',');
+                            if (messageArr.Length != 0)
+                            {
+                                speed = Convert.ToSingle(messageArr[0]);
+                                cadence = Convert.ToSingle(messageArr[1]);
+
+                                if(lastReading != DateTime.MinValue)
+                                {
+                                    //  this gives us the time since the last reading
+                                    //  we will use this to calculat how far we have travelled at our current speed
+                                    timeDelta = DateTime.Now - lastReading;
+                                    time += timeDelta;
+                                }
+                                lastReading = DateTime.Now;
+                                distance += speed * (float)timeDelta.TotalHours;
+                            }
+                        }
                     }
                 }
+
+                Thread.Sleep(500);
             }
             catch (System.Exception ex)
             {
@@ -54,11 +89,17 @@ public class SpeedoController : MonoBehaviour {
 	// Update is called once per frame
 	void Update () {
         speedoText.text = speed.ToString();
-        cadenceText.text = cadence.ToString();        
+        cadenceText.text = cadence.ToString();
+        distanceText.text = distance.ToString("F");
+        timeText.text = string.Format("{0}:{1}:{2}",
+            time.Hours, time.Minutes, time.Seconds);
 	}
 
-    public void OpenConnection()
+    public void OpenConnection(string portName)
     {
+        if(!serialPort.IsOpen)
+            serialPort = new SerialPort(portName, 9600, Parity.None, 8, StopBits.One);
+
         if (serialPort != null)
         {
             if (serialPort.IsOpen)
@@ -85,7 +126,42 @@ public class SpeedoController : MonoBehaviour {
             }
         }
     }
-    
+
+    private string FindSpeedo()
+    {
+        foreach (string portname in SerialPort.GetPortNames())
+        {
+            Debug.Log(string.Format("Testing {0}", portname));
+            try
+            {
+                serialPort = new SerialPort(portname, 9600, Parity.None, 8, StopBits.One);
+                using(serialPort)
+                {
+                    serialPort.ReadTimeout = 2000;
+                    serialPort.WriteTimeout = 2000;
+
+	                if(!serialPort.IsOpen)
+                    {
+                        serialPort.Open();
+                        serialPort.WriteLine("h");
+                        string response = serialPort.ReadLine();
+                        if (response.Contains("DeskCycle Speedo"))
+                        {
+                            Debug.Log(string.Format("Speedo found on port {0}", portname));
+                            return portname;
+                        } 
+                    } 
+                }
+                
+            }
+            catch (Exception e)
+            {
+                Debug.LogException(e);
+            }
+        }
+        return string.Empty;
+    }
+
     void OnApplicationQuit()
     {
         serialPort.Close();
