@@ -138,10 +138,27 @@ ISR(TIMER1_COMPA_vect) {
 }
 
 void loop() {
-  //  Return speed and cadence as comma separated values
-  Serial.print(currentSpeed);
-  Serial.print(",");
-  Serial.println(cadence);          
-  delay(500);
+  
+  if(Serial.available() > 0)
+  {
+    int inByte = Serial.read();
+    switch(inByte)
+    {
+      case 'h':
+        Serial.println("DeskCycle Speedo");
+        break;
+      case 's':
+        Serial.println(currentSpeed);
+        break;
+      case 'c':
+        Serial.println(cadence);
+        break;
+      case 'b':
+        Serial.print(currentSpeed);
+        Serial.print(",");
+        Serial.println(cadence);
+        break;
+    }
+  }
 }
 
