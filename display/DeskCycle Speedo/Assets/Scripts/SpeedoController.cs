@@ -21,7 +21,7 @@ public class SpeedoController : MonoBehaviour {
     private float speed = 0;
     private float cadence = 0;
     private float distance = 0;
-    private TimeSpan time = new TimeSpan(0);
+    private TimeSpan duration = new TimeSpan(0);
 
     public Text speedoText;
     public Text cadenceText;
@@ -35,6 +35,8 @@ public class SpeedoController : MonoBehaviour {
 	// Use this for initialization
     void Start()
     {
+        OpenLog();
+
         serialMonitor.WorkerSupportsCancellation = true;
         serialMonitor.DoWork += serialMonitor_DoWork;
         serialMonitor.RunWorkerAsync();
@@ -76,7 +78,7 @@ public class SpeedoController : MonoBehaviour {
                                         //  this gives us the time since the last reading
                                         //  we will use this to calculat how far we have travelled at our current speed
                                         timeDelta = DateTime.Now - lastReading;
-                                        time += timeDelta;
+                                        duration += timeDelta;
                                     }
                                     lastReading = DateTime.Now;
                                     distance += speed * (float)timeDelta.TotalHours; 
@@ -121,7 +123,7 @@ public class SpeedoController : MonoBehaviour {
             // Create a file to write to. 
             using (StreamWriter sw = File.CreateText(filename))
             {
-                sw.WriteLine("DateTime,Speed,Cadence,Distance");
+                sw.WriteLine("DateTime,Speed (MPH),Cadence (RPM),Distance (Miles),Duration (HH:MM:SS)");
             }
         }
 
@@ -130,12 +132,57 @@ public class SpeedoController : MonoBehaviour {
             // Create a file to write to. 
             using (StreamWriter sw = File.AppendText(filename))
             {
-                sw.WriteLine("{0},{1},{2},{3}",
+                sw.WriteLine("{0},{1},{2},{3},{4}",
                     DateTime.Now.ToString(),
                     speed,
                     cadence,
-                    distance);
+                    distance,
+                    string.Format("{0:00}:{1:00}:{2:00}",
+                        duration.Hours, duration.Minutes, duration.Seconds));
             }
+        }
+    }
+
+    private void OpenLog()
+    {
+        try
+        {
+            string filename = string.Format(@"Data\{0:00}{1:00}{2:0000}.csv",
+                DateTime.Now.Day,
+                DateTime.Now.Month,
+                DateTime.Now.Year);
+
+            if (File.Exists(filename))
+            {
+                string lastLine = string.Empty;
+                string currentLine = string.Empty;
+
+                // Create a file to write to. 
+                using (StreamReader sr = new StreamReader(filename))
+                {
+                    while ((currentLine = sr.ReadLine()) != null)
+                    {
+                        lastLine = currentLine;
+                    }
+                }
+
+                string[] csv = lastLine.Split(',');
+                if (csv[0] != "DateTime")
+                {
+                    distance = Convert.ToSingle(csv[3]);
+
+                    string durStr = csv[4];
+                    string[] durStrArr = durStr.Split(':');
+                    duration = new TimeSpan(
+                        Convert.ToInt32(durStrArr[0]),
+                        Convert.ToInt32(durStrArr[1]),
+                        Convert.ToInt32(durStrArr[2]));
+                }
+            }
+        }
+        catch (Exception e)
+        {
+            Debug.LogException(e);
         }
     }
 	
@@ -145,7 +192,7 @@ public class SpeedoController : MonoBehaviour {
         cadenceText.text = cadence.ToString();
         distanceText.text = distance.ToString("F");
         timeText.text = string.Format("{0:00}:{1:00}:{2:00}",
-            time.Hours, time.Minutes, time.Seconds);
+            duration.Hours, duration.Minutes, duration.Seconds);
 	}
 
     public void OpenConnection(string portName)
