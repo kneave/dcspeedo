@@ -88,7 +88,10 @@ public class SpeedoController : MonoBehaviour {
                                     lastReading = DateTime.MinValue;
                                 }
 
-                                WriteLog();
+                                if (speed > 0)
+                                {
+                                    WriteLog(); 
+                                }
                             }
                         }
                     }
