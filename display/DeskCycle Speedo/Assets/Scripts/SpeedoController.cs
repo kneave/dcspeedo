@@ -8,7 +8,11 @@ using UnityEngine.UI;
 
 public class SpeedoController : MonoBehaviour {
     private SerialPort serialPort;
-    private string port = string.Empty;
+
+    //  For some reason the COM searching code isn't working on my work machine
+    //  temporarily disabled until I get it working again.
+    //private string port = string.Empty;
+    private string port = "COM6";
 
     private string message;
     private string[] messageArr;
@@ -39,6 +43,9 @@ public class SpeedoController : MonoBehaviour {
     void serialMonitor_DoWork(object sender, DoWorkEventArgs e)
     {
         TimeSpan timeDelta = new TimeSpan();
+
+        //  this is temporary, related to the COM searching code bug.
+        serialPort = new SerialPort(port, 9600, Parity.None, 8, StopBits.One);
 
         while (!serialMonitor.CancellationPending)
         {
@@ -73,6 +80,12 @@ public class SpeedoController : MonoBehaviour {
                                     }
                                     lastReading = DateTime.Now;
                                     distance += speed * (float)timeDelta.TotalHours; 
+                                }
+                                else
+                                {
+                                    //  speed is zero therefore stopped peddling
+                                    //  reset lastReading to prevent duration from being screwed up
+                                    lastReading = DateTime.MinValue;
                                 }
 
                                 WriteLog();
@@ -134,9 +147,6 @@ public class SpeedoController : MonoBehaviour {
 
     public void OpenConnection(string portName)
     {
-        if(!serialPort.IsOpen)
-            serialPort = new SerialPort(portName, 9600, Parity.None, 8, StopBits.One);
-
         if (serialPort != null)
         {
             if (serialPort.IsOpen)
@@ -174,14 +184,15 @@ public class SpeedoController : MonoBehaviour {
                 serialPort = new SerialPort(portname, 9600, Parity.None, 8, StopBits.One);
                 using(serialPort)
                 {
-                    serialPort.ReadTimeout = 2000;
-                    serialPort.WriteTimeout = 2000;
+                    serialPort.ReadTimeout = 5000;
+                    serialPort.WriteTimeout = 500;
 
 	                if(!serialPort.IsOpen)
                     {
                         serialPort.Open();
                         serialPort.WriteLine("h");
                         string response = serialPort.ReadLine();
+                        Debug.Log(response);
                         if (response.Contains("DeskCycle Speedo"))
                         {
                             Debug.Log(string.Format("Speedo found on port {0}", portname));
