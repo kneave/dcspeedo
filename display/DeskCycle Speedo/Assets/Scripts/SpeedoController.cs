@@ -30,6 +30,8 @@ public class SpeedoController : MonoBehaviour {
     public Text cadenceText;
     public Text distanceText;
     public Text timeText;
+    public Text totalDistanceText;
+    public Text totalTimeText;
 
     private DateTime lastReading = DateTime.MinValue;
 
@@ -164,12 +166,12 @@ public class SpeedoController : MonoBehaviour {
             {
                 fileNameTime = DateTime.Now.AddDays(-i);
                 string filename = string.Format(@"Data\{0:00}{1:00}{2:0000}.csv",
-                    DateTime.Now.Day,
-                    DateTime.Now.Month,
-                    DateTime.Now.Year);
+                    fileNameTime.Day,
+                    fileNameTime.Month,
+                    fileNameTime.Year);
 
                 lastLine = GetLastResults(filename);
-
+                
                 if (string.IsNullOrEmpty(lastLine))
                     continue;
 
@@ -215,7 +217,6 @@ public class SpeedoController : MonoBehaviour {
      
         if (File.Exists(filename))
         {
-
             // Create a file to write to. 
             using (StreamReader sr = new StreamReader(filename))
             {
@@ -236,6 +237,17 @@ public class SpeedoController : MonoBehaviour {
         distanceText.text = distance.ToString("F");
         timeText.text = string.Format("{0:00}:{1:00}:{2:00}",
             duration.Hours, duration.Minutes, duration.Seconds);
+
+        float tempDist = sevenDayDistance + distance;
+        TimeSpan tempDur = sevenDayDuration + duration;
+
+        totalDistanceText.text = tempDist.ToString("F");
+        if (tempDur.TotalHours >= 24)
+            totalTimeText.text = string.Format("{0}:{1:00}:{2:00}:{3:00}",
+                tempDur.Days, tempDur.Hours, tempDur.Minutes, tempDur.Seconds); 
+        else
+            totalTimeText.text = string.Format("{0:00}:{1:00}:{2:00}",
+                tempDur.Hours, tempDur.Minutes, tempDur.Seconds); 
 	}
 
     public void OpenConnection(string portName)
