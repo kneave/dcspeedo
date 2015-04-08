@@ -23,10 +23,15 @@ public class SpeedoController : MonoBehaviour {
     private float distance = 0;
     private TimeSpan duration = new TimeSpan(0);
 
+    private float sevenDayDistance = 0;
+    private TimeSpan sevenDayDuration = new TimeSpan(0);
+
     public Text speedoText;
     public Text cadenceText;
     public Text distanceText;
     public Text timeText;
+    public Text totalDistanceText;
+    public Text totalTimeText;
 
     private DateTime lastReading = DateTime.MinValue;
 
@@ -35,7 +40,10 @@ public class SpeedoController : MonoBehaviour {
 	// Use this for initialization
     void Start()
     {
-        OpenLog();
+        OpenLogs();
+
+        Debug.Log(string.Format("7day distance: {0}", sevenDayDistance));
+        Debug.Log(string.Format("7day duration: {0}", sevenDayDuration));
 
         serialMonitor.WorkerSupportsCancellation = true;
         serialMonitor.DoWork += serialMonitor_DoWork;
@@ -143,47 +151,83 @@ public class SpeedoController : MonoBehaviour {
         }
     }
 
-    private void OpenLog()
+    private void OpenLogs()
     {
         try
         {
-            string filename = string.Format(@"Data\{0:00}{1:00}{2:0000}.csv",
-                DateTime.Now.Day,
-                DateTime.Now.Month,
-                DateTime.Now.Year);
+            string lastLine = string.Empty;
+            DateTime fileNameTime;
 
-            if (File.Exists(filename))
+            //  Opening the logs, reset the counters
+            sevenDayDuration = new TimeSpan(0);
+            sevenDayDistance = 0;
+
+            for (int i = 0; i < 7; i++)
             {
-                string lastLine = string.Empty;
-                string currentLine = string.Empty;
+                fileNameTime = DateTime.Now.AddDays(-i);
+                string filename = string.Format(@"Data\{0:00}{1:00}{2:0000}.csv",
+                    fileNameTime.Day,
+                    fileNameTime.Month,
+                    fileNameTime.Year);
 
-                // Create a file to write to. 
-                using (StreamReader sr = new StreamReader(filename))
-                {
-                    while ((currentLine = sr.ReadLine()) != null)
-                    {
-                        lastLine = currentLine;
-                    }
-                }
+                lastLine = GetLastResults(filename);
+                
+                if (string.IsNullOrEmpty(lastLine))
+                    continue;
 
                 string[] csv = lastLine.Split(',');
                 if (csv[0] != "DateTime")
                 {
-                    distance = Convert.ToSingle(csv[3]);
+                    if (i != 0)
+                    {
+                        sevenDayDistance += Convert.ToSingle(csv[3]);
 
-                    string durStr = csv[4];
-                    string[] durStrArr = durStr.Split(':');
-                    duration = new TimeSpan(
-                        Convert.ToInt32(durStrArr[0]),
-                        Convert.ToInt32(durStrArr[1]),
-                        Convert.ToInt32(durStrArr[2]));
-                }
+                        string durStr = csv[4];
+                        string[] durStrArr = durStr.Split(':');
+                        sevenDayDuration += new TimeSpan(
+                            Convert.ToInt32(durStrArr[0]),
+                            Convert.ToInt32(durStrArr[1]),
+                            Convert.ToInt32(durStrArr[2])); 
+                    }
+                    else
+                    {
+                        distance += Convert.ToSingle(csv[3]);
+
+                        string durStr = csv[4];
+                        string[] durStrArr = durStr.Split(':');
+                        duration += new TimeSpan(
+                            Convert.ToInt32(durStrArr[0]),
+                            Convert.ToInt32(durStrArr[1]),
+                            Convert.ToInt32(durStrArr[2]));
+                    }
+                } 
             }
+
         }
         catch (Exception e)
         {
             Debug.LogException(e);
         }
+    }
+
+    private string GetLastResults(string filename)
+    {
+        string lastLine = string.Empty;
+        string currentLine = string.Empty;
+     
+        if (File.Exists(filename))
+        {
+            // Create a file to write to. 
+            using (StreamReader sr = new StreamReader(filename))
+            {
+                while ((currentLine = sr.ReadLine()) != null)
+                {
+                    lastLine = currentLine;
+                }
+            }
+        }
+
+        return lastLine;
     }
 	
 	// Update is called once per frame
@@ -193,6 +237,17 @@ public class SpeedoController : MonoBehaviour {
         distanceText.text = distance.ToString("F");
         timeText.text = string.Format("{0:00}:{1:00}:{2:00}",
             duration.Hours, duration.Minutes, duration.Seconds);
+
+        float tempDist = sevenDayDistance + distance;
+        TimeSpan tempDur = sevenDayDuration + duration;
+
+        totalDistanceText.text = tempDist.ToString("F");
+        if (tempDur.TotalHours >= 24)
+            totalTimeText.text = string.Format("{0}:{1:00}:{2:00}:{3:00}",
+                tempDur.Days, tempDur.Hours, tempDur.Minutes, tempDur.Seconds); 
+        else
+            totalTimeText.text = string.Format("{0:00}:{1:00}:{2:00}",
+                tempDur.Hours, tempDur.Minutes, tempDur.Seconds); 
 	}
 
     public void OpenConnection(string portName)
