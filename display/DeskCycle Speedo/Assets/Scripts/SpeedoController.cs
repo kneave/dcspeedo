@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.IO;
 using System.IO.Ports;
@@ -28,14 +29,23 @@ public class SpeedoController : MonoBehaviour {
 
     public Text speedoText;
     public Text cadenceText;
+    public Text aveSpeedoText;
+    public Text aveCadenceText;
     public Text distanceText;
     public Text timeText;
     public Text totalDistanceText;
     public Text totalTimeText;
 
+    private float averageSpeed = 0f;
+    private float averageCadence = 0f;
+
+    private List<float> speeds = new List<float>();
+    private List<float> cadences = new List<float>();
+
     private DateTime lastReading = DateTime.MinValue;
 
     private BackgroundWorker serialMonitor = new BackgroundWorker();
+    private BackgroundWorker mathsWorker = new BackgroundWorker();
 
 	// Use this for initialization
     void Start()
@@ -48,6 +58,24 @@ public class SpeedoController : MonoBehaviour {
         serialMonitor.WorkerSupportsCancellation = true;
         serialMonitor.DoWork += serialMonitor_DoWork;
         serialMonitor.RunWorkerAsync();
+
+        mathsWorker.WorkerSupportsCancellation = true;
+        mathsWorker.DoWork += mathsWorker_DoWork;
+    }
+
+    void mathsWorker_DoWork(object sender, DoWorkEventArgs e)
+    {
+        float totalSpeed = 0;
+        float totalCadence = 0;
+
+        foreach (float s in speeds)
+            totalSpeed += s;
+
+        foreach (float c in cadences)
+            totalCadence += c;
+
+        averageSpeed = totalSpeed / speeds.Count;
+        averageCadence = totalCadence / cadences.Count;
     }
 
     void serialMonitor_DoWork(object sender, DoWorkEventArgs e)
@@ -127,6 +155,11 @@ public class SpeedoController : MonoBehaviour {
         {
             //  Reset the distance with each new file.  This means each new day will be reset.
             distance = 0;
+            duration = new TimeSpan(0);
+
+            speeds.Clear();
+            cadences.Clear();
+            OpenLogs();
 
             // Create a file to write to. 
             using (StreamWriter sw = File.CreateText(filename))
@@ -134,6 +167,11 @@ public class SpeedoController : MonoBehaviour {
                 sw.WriteLine("DateTime,Speed (MPH),Cadence (RPM),Distance (Miles),Duration (HH:MM:SS)");
             }
         }
+
+        speeds.Add(speed);
+        cadences.Add(cadence);
+        if (!mathsWorker.IsBusy)
+            mathsWorker.RunWorkerAsync();
 
         if (File.Exists(filename))
         {
@@ -234,6 +272,10 @@ public class SpeedoController : MonoBehaviour {
 	void Update () {
         speedoText.text = speed.ToString();
         cadenceText.text = cadence.ToString();
+
+        aveSpeedoText.text = string.Format("{0:F}", averageSpeed);
+        aveCadenceText.text = string.Format("{0:F}", averageCadence);
+
         distanceText.text = distance.ToString("F");
         timeText.text = string.Format("{0:00}:{1:00}:{2:00}",
             duration.Hours, duration.Minutes, duration.Seconds);
