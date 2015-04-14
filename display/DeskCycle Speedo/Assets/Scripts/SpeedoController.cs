@@ -273,8 +273,8 @@ public class SpeedoController : MonoBehaviour {
         speedoText.text = speed.ToString();
         cadenceText.text = cadence.ToString();
 
-        aveSpeedoText.text = averageSpeed.ToString();
-        aveCadenceText.text = averageCadence.ToString();
+        aveSpeedoText.text = string.Format("{0:F}", averageSpeed);
+        aveCadenceText.text = string.Format("{0:F}", averageCadence);
 
         distanceText.text = distance.ToString("F");
         timeText.text = string.Format("{0:00}:{1:00}:{2:00}",
