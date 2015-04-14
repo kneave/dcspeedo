@@ -942,7 +942,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 'Average Speed (MPH):'
+  m_Text: 'Ave. Speed:'
 --- !u!222 &1450057813
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -1167,6 +1167,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   speedoText: {fileID: 1629788982}
   cadenceText: {fileID: 1537786447}
+  aveSpeedoText: {fileID: 715601167}
+  aveCadenceText: {fileID: 671589603}
   distanceText: {fileID: 1135183599}
   timeText: {fileID: 1288005937}
   totalDistanceText: {fileID: 1852016013}
@@ -1629,7 +1631,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 'Average Cadence (RPM):'
+  m_Text: 'Ave. Cadence:'
 --- !u!222 &2072838983
 CanvasRenderer:
   m_ObjectHideFlags: 0
