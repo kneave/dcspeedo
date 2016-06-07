@@ -12,8 +12,8 @@ public class SpeedoController : MonoBehaviour {
 
     //  For some reason the COM searching code isn't working on my work machine
     //  temporarily disabled until I get it working again.
-    //private string port = string.Empty;
-    private string port = "COM6";
+    private string port = string.Empty;
+    //private string port = "COM6";
 
     private string message;
     private string[] messageArr;
@@ -50,6 +50,8 @@ public class SpeedoController : MonoBehaviour {
 	// Use this for initialization
     void Start()
     {
+        ReadPortName();
+
         OpenLogs();
 
         Debug.Log(string.Format("7day distance: {0}", sevenDayDistance));
@@ -61,6 +63,19 @@ public class SpeedoController : MonoBehaviour {
 
         mathsWorker.WorkerSupportsCancellation = true;
         mathsWorker.DoWork += mathsWorker_DoWork;
+    }
+
+    private void ReadPortName()
+    {        
+        string filename = Application.dataPath + "/StreamingAssets/Settings.txt";
+        if (File.Exists(filename))
+        {
+            // Create a file to write to. 
+            using (StreamReader sr = new StreamReader(filename))
+            {
+                port = sr.ReadLine();
+            }
+        }
     }
 
     void mathsWorker_DoWork(object sender, DoWorkEventArgs e)
@@ -340,7 +355,7 @@ public class SpeedoController : MonoBehaviour {
                         serialPort.WriteLine("h");
                         string response = serialPort.ReadLine();
                         Debug.Log(response);
-                        if (response.Contains("DeskCycle Speedo"))
+                        if (response.Contains("DeskCycle"))
                         {
                             Debug.Log(string.Format("Speedo found on port {0}", portname));
                             return portname;
