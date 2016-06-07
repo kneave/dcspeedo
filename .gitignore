@@ -7,3 +7,5 @@ Temp
 *.sln
 *.userprefs
 display/DeskCycle Speedo/Data/
+display/DeskCycle Speedo/obj/
+display/DeskCycle Speedo/Assets/UnityVS/
